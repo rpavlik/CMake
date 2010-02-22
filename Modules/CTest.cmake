@@ -127,17 +127,6 @@ if(BUILD_TESTING)
 	endif()
 	set_if_not_set(NIGHTLY_START_TIME "00:00:00 EDT")
 
-	find_program(CVSCOMMAND cvs)
-	set(CVS_UPDATE_OPTIONS
-		"-d -A -P"
-		CACHE
-		STRING
-		"Options passed to the cvs update command.")
-	find_program(SVNCOMMAND svn)
-	find_program(BZRCOMMAND bzr)
-	find_program(HGCOMMAND hg)
-	find_program(GITCOMMAND git)
-
 	if(NOT UPDATE_TYPE)
 		if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CVS")
 			set(UPDATE_TYPE cvs)
@@ -154,18 +143,32 @@ if(BUILD_TESTING)
 
 	string(TOLOWER "${UPDATE_TYPE}" _update_type)
 	if("${_update_type}" STREQUAL "cvs")
+		find_program(CVSCOMMAND cvs)
+		set(CVS_UPDATE_OPTIONS
+			"-d -A -P"
+			CACHE
+			STRING
+			"Options passed to the cvs update command.")
 		set(UPDATE_COMMAND "${CVSCOMMAND}")
 		set(UPDATE_OPTIONS "${CVS_UPDATE_OPTIONS}")
+
 	elseif("${_update_type}" STREQUAL "svn")
+		find_program(SVNCOMMAND svn)
 		set(UPDATE_COMMAND "${SVNCOMMAND}")
 		set(UPDATE_OPTIONS "${SVN_UPDATE_OPTIONS}")
+
 	elseif("${_update_type}" STREQUAL "bzr")
+		find_program(BZRCOMMAND bzr)
 		set(UPDATE_COMMAND "${BZRCOMMAND}")
 		set(UPDATE_OPTIONS "${BZR_UPDATE_OPTIONS}")
+
 	elseif("${_update_type}" STREQUAL "hg")
+		find_program(HGCOMMAND hg)
 		set(UPDATE_COMMAND "${HGCOMMAND}")
 		set(UPDATE_OPTIONS "${HG_UPDATE_OPTIONS}")
+
 	elseif("${_update_type}" STREQUAL "git")
+		find_program(GITCOMMAND git)
 		set(UPDATE_COMMAND "${GITCOMMAND}")
 		set(UPDATE_OPTIONS "${GIT_UPDATE_OPTIONS}")
 	endif()
