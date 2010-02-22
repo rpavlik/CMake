@@ -61,28 +61,48 @@ IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 
 # Choose a default install prefix for this platform.
-IF(CMAKE_HOST_UNIX)
-  SET(CMAKE_INSTALL_PREFIX "/usr/local"
-    CACHE PATH "Install path prefix, prepended onto install directories.")
-ELSE(CMAKE_HOST_UNIX)
-  IF("$ENV{ProgramFiles}" MATCHES "^$")
-    IF("$ENV{SystemDrive}" MATCHES "^$")
-      SET(CMAKE_GENERIC_PROGRAM_FILES "C:/Program Files")
-    ELSE("$ENV{SystemDrive}" MATCHES "^$")
-      SET(CMAKE_GENERIC_PROGRAM_FILES "$ENV{SystemDrive}/Program Files")
-    ENDIF("$ENV{SystemDrive}" MATCHES "^$")
-  ELSE("$ENV{ProgramFiles}" MATCHES "^$")
-    SET(CMAKE_GENERIC_PROGRAM_FILES "$ENV{ProgramFiles}")
-  ENDIF("$ENV{ProgramFiles}" MATCHES "^$")
-  SET(CMAKE_INSTALL_PREFIX
-    "${CMAKE_GENERIC_PROGRAM_FILES}/${PROJECT_NAME}"
-    CACHE PATH "Install path prefix, prepended onto install directories.")
-  SET(CMAKE_GENERIC_PROGRAM_FILES)
+if(CMAKE_HOST_UNIX)
+	set(CMAKE_INSTALL_PREFIX
+		"/usr/local"
+		CACHE
+		PATH
+		"Install path prefix, prepended onto install directories.")
+else()
+	if(CMAKE_SIZEOF_VOID_P MATCHES "8")
+		# 64-bit build on Win64
+		if(NOT "$ENV{ProgramW6432}" MATCHES "^$")
+			set(CMAKE_GENERIC_PROGRAM_FILES "$ENV{ProgramW6432}")
+		endif()
 
-  # Make sure the prefix uses forward slashes.
-  STRING(REGEX REPLACE "\\\\" "/"
-    CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
-ENDIF(CMAKE_HOST_UNIX)
+	else()
+		# 32-bit build
+		if(NOT "$ENV{ProgramFiles(x86)}" MATCHES "^$")
+			# building on Win64
+			set(CMAKE_GENERIC_PROGRAM_FILES "$ENV{ProgramFiles(x86)}")
+		elseif(NOT "$ENV{ProgramFiles}" MATCHES "^$")
+			# building on Win32
+			set(CMAKE_GENERIC_PROGRAM_FILES "$ENV{ProgramFiles}")
+		endif()
+	endif()
+
+	if(NOT "${CMAKE_GENERIC_PROGRAM_FILES}")
+		# Fallback case
+		if("$ENV{SystemDrive}" MATCHES "^$")
+			set(CMAKE_GENERIC_PROGRAM_FILES "C:/Program Files")
+		else()
+			set(CMAKE_GENERIC_PROGRAM_FILES "$ENV{SystemDrive}/Program Files")
+		endif()
+	endif()
+
+	set(CMAKE_INSTALL_PREFIX
+		"${CMAKE_GENERIC_PROGRAM_FILES}/${PROJECT_NAME}"
+		CACHE
+		PATH
+		"Install path prefix, prepended onto install directories.")
+	set(CMAKE_GENERIC_PROGRAM_FILES)
+
+	file(TO_CMAKE_PATH "${CMAKE_INSTALL_PREFIX}" CMAKE_INSTALL_PREFIX)
+endif()
 
 MARK_AS_ADVANCED(
   CMAKE_SKIP_RPATH
