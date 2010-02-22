@@ -62,7 +62,7 @@ option(BUILD_TESTING "Build the testing tree." ON)
 
 # function to turn generator name into a version string
 # like vs7 vs71 vs8 vs9
-function(GET_VS_VERSION_STRING generator var)
+function(get_vs_version_string generator var)
 	string(REGEX
 		REPLACE
 		"Visual Studio ([0-9][0-9]?)($|.*)"
@@ -79,19 +79,19 @@ endfunction()
 
 if(BUILD_TESTING)
 	# Setup some auxilary macros
-	macro(SET_IF_NOT_SET var val)
+	macro(set_if_not_set var val)
 		if(NOT DEFINED "${var}")
 			set("${var}" "${val}")
 		endif()
 	endmacro()
 
-	macro(SET_IF_SET var val)
+	macro(set_if_set var val)
 		if(NOT "${val}" MATCHES "^$")
 			set("${var}" "${val}")
 		endif()
 	endmacro()
 
-	macro(SET_IF_SET_AND_NOT_SET var val)
+	macro(set_if_set_and_not_set var val)
 		if(NOT "${val}" MATCHES "^$")
 			set_if_not_set("${var}" "${val}")
 		endif()
@@ -212,23 +212,29 @@ if(BUILD_TESTING)
 	# set the build name
 	if(NOT BUILDNAME)
 		set(DART_COMPILER "${CMAKE_CXX_COMPILER}")
+
 		if(NOT DART_COMPILER)
 			set(DART_COMPILER "${CMAKE_C_COMPILER}")
 		endif()
+
 		if(NOT DART_COMPILER)
 			set(DART_COMPILER "unknown")
 		endif()
+
 		if(WIN32)
 			set(DART_NAME_COMPONENT "NAME_WE")
 		else()
 			set(DART_NAME_COMPONENT "NAME")
 		endif()
+
 		if(NOT BUILD_NAME_SYSTEM_NAME)
 			set(BUILD_NAME_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
 		endif()
+
 		if(WIN32)
 			set(BUILD_NAME_SYSTEM_NAME "Win32")
 		endif()
+
 		if(UNIX OR BORLAND)
 			get_filename_component(DART_CXX_NAME
 				"${CMAKE_CXX_COMPILER}"
@@ -238,12 +244,15 @@ if(BUILD_TESTING)
 				"${CMAKE_BUILD_TOOL}"
 				${DART_NAME_COMPONENT})
 		endif()
+
 		if(DART_CXX_NAME MATCHES "msdev")
 			set(DART_CXX_NAME "vs60")
 		endif()
+
 		if(DART_CXX_NAME MATCHES "devenv")
 			get_vs_version_string("${CMAKE_GENERATOR}" DART_CXX_NAME)
 		endif()
+
 		set(BUILDNAME "${BUILD_NAME_SYSTEM_NAME}-${DART_CXX_NAME}")
 	endif()
 
@@ -265,6 +274,7 @@ if(BUILD_TESTING)
 	if(NOT "${CMAKE_GENERATOR}" MATCHES "Make")
 		set(CTEST_USE_LAUNCHERS 0)
 	endif()
+
 	if(CTEST_USE_LAUNCHERS)
 		set(CTEST_LAUNCH_COMPILE
 			"\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <OBJECT> --source <SOURCE> --language <LANGUAGE> --")
@@ -300,7 +310,7 @@ if(BUILD_TESTING)
 		SLURM_SBATCH_COMMAND
 		SLURM_SRUN_COMMAND
 		SITE)
-	#  BUILDNAME
+
 	if(NOT RUN_FROM_DART)
 		set(RUN_FROM_CTEST_OR_DART 1)
 		include(CTestTargets)
