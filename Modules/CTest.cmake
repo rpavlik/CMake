@@ -58,216 +58,252 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-OPTION(BUILD_TESTING "Build the testing tree." ON)
+option(BUILD_TESTING "Build the testing tree." ON)
 
 # function to turn generator name into a version string
-# like vs7 vs71 vs8 vs9 
-FUNCTION(GET_VS_VERSION_STRING generator var)
-  STRING(REGEX REPLACE "Visual Studio ([0-9][0-9]?)($|.*)" "\\1" NUMBER "${generator}") 
-  IF("${generator}" MATCHES "Visual Studio 7 .NET 2003")
-    SET(ver_string "vs71")
-  ELSE("${generator}" MATCHES "Visual Studio 7 .NET 2003")
-    SET(ver_string "vs${NUMBER}")
-  ENDIF("${generator}" MATCHES "Visual Studio 7 .NET 2003")
-  SET(${var} ${ver_string} PARENT_SCOPE)
-ENDFUNCTION(GET_VS_VERSION_STRING)
+# like vs7 vs71 vs8 vs9
+function(GET_VS_VERSION_STRING generator var)
+	string(REGEX
+		REPLACE
+		"Visual Studio ([0-9][0-9]?)($|.*)"
+		"\\1"
+		NUMBER
+		"${generator}")
+	if("${generator}" MATCHES "Visual Studio 7 .NET 2003")
+		set(ver_string "vs71")
+	else()
+		set(ver_string "vs${NUMBER}")
+	endif()
+	set(${var} ${ver_string} PARENT_SCOPE)
+endfunction()
 
-IF(BUILD_TESTING)
-  # Setup some auxilary macros
-  MACRO(SET_IF_NOT_SET var val)
-    IF(NOT DEFINED "${var}")
-      SET("${var}" "${val}")
-    ENDIF(NOT DEFINED "${var}")
-  ENDMACRO(SET_IF_NOT_SET)
+if(BUILD_TESTING)
+	# Setup some auxilary macros
+	macro(SET_IF_NOT_SET var val)
+		if(NOT DEFINED "${var}")
+			set("${var}" "${val}")
+		endif()
+	endmacro()
 
-  MACRO(SET_IF_SET var val)
-    IF(NOT "${val}" MATCHES "^$")
-      SET("${var}" "${val}")
-    ENDIF(NOT "${val}" MATCHES "^$")
-  ENDMACRO(SET_IF_SET)
+	macro(SET_IF_SET var val)
+		if(NOT "${val}" MATCHES "^$")
+			set("${var}" "${val}")
+		endif()
+	endmacro()
 
-  MACRO(SET_IF_SET_AND_NOT_SET var val)
-    IF(NOT "${val}" MATCHES "^$")
-      SET_IF_NOT_SET("${var}" "${val}")
-    ENDIF(NOT "${val}" MATCHES "^$")
-  ENDMACRO(SET_IF_SET_AND_NOT_SET)
+	macro(SET_IF_SET_AND_NOT_SET var val)
+		if(NOT "${val}" MATCHES "^$")
+			set_if_not_set("${var}" "${val}")
+		endif()
+	endmacro()
 
-  # Make sure testing is enabled
-  ENABLE_TESTING()
+	# Make sure testing is enabled
+	enable_testing()
 
-  IF(EXISTS "${PROJECT_SOURCE_DIR}/CTestConfig.cmake")
-    INCLUDE("${PROJECT_SOURCE_DIR}/CTestConfig.cmake")
-    SET_IF_SET_AND_NOT_SET(NIGHTLY_START_TIME "${CTEST_NIGHTLY_START_TIME}")
-    SET_IF_SET_AND_NOT_SET(DROP_METHOD "${CTEST_DROP_METHOD}")
-    SET_IF_SET_AND_NOT_SET(DROP_SITE "${CTEST_DROP_SITE}")
-    SET_IF_SET_AND_NOT_SET(DROP_SITE_USER "${CTEST_DROP_SITE_USER}")
-    SET_IF_SET_AND_NOT_SET(DROP_SITE_PASSWORD "${CTEST_DROP_SITE_PASWORD}")
-    SET_IF_SET_AND_NOT_SET(DROP_SITE_MODE "${CTEST_DROP_SITE_MODE}")
-    SET_IF_SET_AND_NOT_SET(DROP_LOCATION "${CTEST_DROP_LOCATION}")
-    SET_IF_SET_AND_NOT_SET(TRIGGER_SITE "${CTEST_TRIGGER_SITE}")
-    SET_IF_SET_AND_NOT_SET(UPDATE_TYPE "${CTEST_UPDATE_TYPE}")
-  ENDIF(EXISTS "${PROJECT_SOURCE_DIR}/CTestConfig.cmake")
+	if(EXISTS "${PROJECT_SOURCE_DIR}/CTestConfig.cmake")
+		include("${PROJECT_SOURCE_DIR}/CTestConfig.cmake")
+		set_if_set_and_not_set(NIGHTLY_START_TIME
+			"${CTEST_NIGHTLY_START_TIME}")
+		set_if_set_and_not_set(DROP_METHOD "${CTEST_DROP_METHOD}")
+		set_if_set_and_not_set(DROP_SITE "${CTEST_DROP_SITE}")
+		set_if_set_and_not_set(DROP_SITE_USER "${CTEST_DROP_SITE_USER}")
+		set_if_set_and_not_set(DROP_SITE_PASSWORD
+			"${CTEST_DROP_SITE_PASWORD}")
+		set_if_set_and_not_set(DROP_SITE_MODE "${CTEST_DROP_SITE_MODE}")
+		set_if_set_and_not_set(DROP_LOCATION "${CTEST_DROP_LOCATION}")
+		set_if_set_and_not_set(TRIGGER_SITE "${CTEST_TRIGGER_SITE}")
+		set_if_set_and_not_set(UPDATE_TYPE "${CTEST_UPDATE_TYPE}")
+	endif()
 
-  # the project can have a DartConfig.cmake file
-  IF(EXISTS "${PROJECT_SOURCE_DIR}/DartConfig.cmake")
-    INCLUDE("${PROJECT_SOURCE_DIR}/DartConfig.cmake")
-  ELSE(EXISTS "${PROJECT_SOURCE_DIR}/DartConfig.cmake")
-    # Dashboard is opened for submissions for a 24 hour period starting at
-    # the specified NIGHTLY_START_TIME. Time is specified in 24 hour format.
-    SET_IF_NOT_SET (NIGHTLY_START_TIME "00:00:00 EDT")
-    SET_IF_NOT_SET(DROP_METHOD "http")
-    SET_IF_NOT_SET (COMPRESS_SUBMISSION ON)
-  ENDIF(EXISTS "${PROJECT_SOURCE_DIR}/DartConfig.cmake")
-  SET_IF_NOT_SET (NIGHTLY_START_TIME "00:00:00 EDT")
+	# the project can have a DartConfig.cmake file
+	if(EXISTS "${PROJECT_SOURCE_DIR}/DartConfig.cmake")
+		include("${PROJECT_SOURCE_DIR}/DartConfig.cmake")
+	else()
+		# Dashboard is opened for submissions for a 24 hour period starting at
+		# the specified NIGHTLY_START_TIME. Time is specified in 24 hour format.
+		set_if_not_set(NIGHTLY_START_TIME "00:00:00 EDT")
+		set_if_not_set(DROP_METHOD "http")
+		set_if_not_set(COMPRESS_SUBMISSION ON)
+	endif()
+	set_if_not_set(NIGHTLY_START_TIME "00:00:00 EDT")
 
-  FIND_PROGRAM(CVSCOMMAND cvs )
-  SET(CVS_UPDATE_OPTIONS "-d -A -P" CACHE STRING 
-    "Options passed to the cvs update command.")
-  FIND_PROGRAM(SVNCOMMAND svn)
-  FIND_PROGRAM(BZRCOMMAND bzr)
-  FIND_PROGRAM(HGCOMMAND hg)
-  FIND_PROGRAM(GITCOMMAND git)
+	find_program(CVSCOMMAND cvs)
+	set(CVS_UPDATE_OPTIONS
+		"-d -A -P"
+		CACHE
+		STRING
+		"Options passed to the cvs update command.")
+	find_program(SVNCOMMAND svn)
+	find_program(BZRCOMMAND bzr)
+	find_program(HGCOMMAND hg)
+	find_program(GITCOMMAND git)
 
-  IF(NOT UPDATE_TYPE)
-    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CVS")
-      SET(UPDATE_TYPE cvs)
-    ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.svn")
-      SET(UPDATE_TYPE svn)
-    ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.bzr")
-      SET(UPDATE_TYPE bzr)
-    ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.hg")
-      SET(UPDATE_TYPE hg)
-    ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
-      SET(UPDATE_TYPE git)
-    ENDIF()
-  ENDIF(NOT UPDATE_TYPE)
+	if(NOT UPDATE_TYPE)
+		if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CVS")
+			set(UPDATE_TYPE cvs)
+		elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.svn")
+			set(UPDATE_TYPE svn)
+		elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.bzr")
+			set(UPDATE_TYPE bzr)
+		elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.hg")
+			set(UPDATE_TYPE hg)
+		elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+			set(UPDATE_TYPE git)
+		endif()
+	endif()
 
-  STRING(TOLOWER "${UPDATE_TYPE}" _update_type)
-  IF("${_update_type}" STREQUAL "cvs")
-    SET(UPDATE_COMMAND "${CVSCOMMAND}")
-    SET(UPDATE_OPTIONS "${CVS_UPDATE_OPTIONS}")
-  ELSEIF("${_update_type}" STREQUAL "svn")
-    SET(UPDATE_COMMAND "${SVNCOMMAND}")
-    SET(UPDATE_OPTIONS "${SVN_UPDATE_OPTIONS}")
-  ELSEIF("${_update_type}" STREQUAL "bzr")
-    SET(UPDATE_COMMAND "${BZRCOMMAND}")
-    SET(UPDATE_OPTIONS "${BZR_UPDATE_OPTIONS}")
-  ELSEIF("${_update_type}" STREQUAL "hg")
-    SET(UPDATE_COMMAND "${HGCOMMAND}")
-    SET(UPDATE_OPTIONS "${HG_UPDATE_OPTIONS}")
-  ELSEIF("${_update_type}" STREQUAL "git")
-    SET(UPDATE_COMMAND "${GITCOMMAND}")
-    SET(UPDATE_OPTIONS "${GIT_UPDATE_OPTIONS}")
-  ENDIF()
+	string(TOLOWER "${UPDATE_TYPE}" _update_type)
+	if("${_update_type}" STREQUAL "cvs")
+		set(UPDATE_COMMAND "${CVSCOMMAND}")
+		set(UPDATE_OPTIONS "${CVS_UPDATE_OPTIONS}")
+	elseif("${_update_type}" STREQUAL "svn")
+		set(UPDATE_COMMAND "${SVNCOMMAND}")
+		set(UPDATE_OPTIONS "${SVN_UPDATE_OPTIONS}")
+	elseif("${_update_type}" STREQUAL "bzr")
+		set(UPDATE_COMMAND "${BZRCOMMAND}")
+		set(UPDATE_OPTIONS "${BZR_UPDATE_OPTIONS}")
+	elseif("${_update_type}" STREQUAL "hg")
+		set(UPDATE_COMMAND "${HGCOMMAND}")
+		set(UPDATE_OPTIONS "${HG_UPDATE_OPTIONS}")
+	elseif("${_update_type}" STREQUAL "git")
+		set(UPDATE_COMMAND "${GITCOMMAND}")
+		set(UPDATE_OPTIONS "${GIT_UPDATE_OPTIONS}")
+	endif()
 
-  SET(DART_TESTING_TIMEOUT 1500 CACHE STRING 
-    "Maximum time allowed before CTest will kill the test.")
+	set(DART_TESTING_TIMEOUT
+		1500
+		CACHE
+		STRING
+		"Maximum time allowed before CTest will kill the test.")
 
-  FIND_PROGRAM(MEMORYCHECK_COMMAND
-    NAMES purify valgrind boundscheck
-    PATHS
-    "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Rational Software\\Purify\\Setup;InstallFolder]"
-    DOC "Path to the memory checking command, used for memory error detection."
-    )
-  FIND_PROGRAM(SLURM_SBATCH_COMMAND sbatch DOC
-    "Path to the SLURM sbatch executable"
-    )
-  FIND_PROGRAM(SLURM_SRUN_COMMAND srun DOC
-    "Path to the SLURM srun executable"
-    )
-  SET(MEMORYCHECK_SUPPRESSIONS_FILE "" CACHE FILEPATH 
-    "File that contains suppressions for the memory checker")
-  FIND_PROGRAM(SCPCOMMAND scp DOC 
-    "Path to scp command, used by CTest for submitting results to a Dart server"
-    )
-  FIND_PROGRAM(COVERAGE_COMMAND gcov DOC 
-    "Path to the coverage program that CTest uses for performing coverage inspection"
-    )
+	find_program(MEMORYCHECK_COMMAND
+		NAMES
+		purify
+		valgrind
+		boundscheck
+		PATHS
+		"[HKEY_LOCAL_MACHINE\\SOFTWARE\\Rational Software\\Purify\\Setup;InstallFolder]"
+		DOC
+		"Path to the memory checking command, used for memory error detection.")
+	find_program(SLURM_SBATCH_COMMAND
+		sbatch
+		DOC
+		"Path to the SLURM sbatch executable")
+	find_program(SLURM_SRUN_COMMAND
+		srun
+		DOC
+		"Path to the SLURM srun executable")
+	set(MEMORYCHECK_SUPPRESSIONS_FILE
+		""
+		CACHE
+		FILEPATH
+		"File that contains suppressions for the memory checker")
+	find_program(SCPCOMMAND
+		scp
+		DOC
+		"Path to scp command, used by CTest for submitting results to a Dart server")
+	find_program(COVERAGE_COMMAND
+		gcov
+		DOC
+		"Path to the coverage program that CTest uses for performing coverage inspection")
 
-  # set the site name
-  SITE_NAME(SITE)
-  # set the build name
-  IF(NOT BUILDNAME)
-    SET(DART_COMPILER "${CMAKE_CXX_COMPILER}")
-    IF(NOT DART_COMPILER)
-      SET(DART_COMPILER "${CMAKE_C_COMPILER}")
-    ENDIF(NOT DART_COMPILER)
-    IF(NOT DART_COMPILER)
-      SET(DART_COMPILER "unknown")
-    ENDIF(NOT DART_COMPILER)
-    IF(WIN32)
-      SET(DART_NAME_COMPONENT "NAME_WE")
-    ELSE(WIN32)
-      SET(DART_NAME_COMPONENT "NAME")
-    ENDIF(WIN32)
-    IF(NOT BUILD_NAME_SYSTEM_NAME)
-      SET(BUILD_NAME_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
-    ENDIF(NOT BUILD_NAME_SYSTEM_NAME)
-    IF(WIN32)
-      SET(BUILD_NAME_SYSTEM_NAME "Win32")
-    ENDIF(WIN32)
-    IF(UNIX OR BORLAND)
-      GET_FILENAME_COMPONENT(DART_CXX_NAME 
-        "${CMAKE_CXX_COMPILER}" ${DART_NAME_COMPONENT})
-    ELSE(UNIX OR BORLAND)
-      GET_FILENAME_COMPONENT(DART_CXX_NAME 
-        "${CMAKE_BUILD_TOOL}" ${DART_NAME_COMPONENT})
-    ENDIF(UNIX OR BORLAND)
-    IF(DART_CXX_NAME MATCHES "msdev")
-      SET(DART_CXX_NAME "vs60")
-    ENDIF(DART_CXX_NAME MATCHES "msdev")
-    IF(DART_CXX_NAME MATCHES "devenv")
-      GET_VS_VERSION_STRING("${CMAKE_GENERATOR}" DART_CXX_NAME)
-    ENDIF(DART_CXX_NAME MATCHES "devenv")
-    SET(BUILDNAME "${BUILD_NAME_SYSTEM_NAME}-${DART_CXX_NAME}")
-  ENDIF(NOT BUILDNAME)
+	# set the site name
+	site_name(SITE)
+	# set the build name
+	if(NOT BUILDNAME)
+		set(DART_COMPILER "${CMAKE_CXX_COMPILER}")
+		if(NOT DART_COMPILER)
+			set(DART_COMPILER "${CMAKE_C_COMPILER}")
+		endif()
+		if(NOT DART_COMPILER)
+			set(DART_COMPILER "unknown")
+		endif()
+		if(WIN32)
+			set(DART_NAME_COMPONENT "NAME_WE")
+		else()
+			set(DART_NAME_COMPONENT "NAME")
+		endif()
+		if(NOT BUILD_NAME_SYSTEM_NAME)
+			set(BUILD_NAME_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
+		endif()
+		if(WIN32)
+			set(BUILD_NAME_SYSTEM_NAME "Win32")
+		endif()
+		if(UNIX OR BORLAND)
+			get_filename_component(DART_CXX_NAME
+				"${CMAKE_CXX_COMPILER}"
+				${DART_NAME_COMPONENT})
+		else()
+			get_filename_component(DART_CXX_NAME
+				"${CMAKE_BUILD_TOOL}"
+				${DART_NAME_COMPONENT})
+		endif()
+		if(DART_CXX_NAME MATCHES "msdev")
+			set(DART_CXX_NAME "vs60")
+		endif()
+		if(DART_CXX_NAME MATCHES "devenv")
+			get_vs_version_string("${CMAKE_GENERATOR}" DART_CXX_NAME)
+		endif()
+		set(BUILDNAME "${BUILD_NAME_SYSTEM_NAME}-${DART_CXX_NAME}")
+	endif()
 
-  # the build command
-  BUILD_COMMAND(MAKECOMMAND CONFIGURATION "\${CTEST_CONFIGURATION_TYPE}")
-  SET(MAKECOMMAND ${MAKECOMMAND} CACHE STRING "Command to build the project")
+	# the build command
+	build_command(MAKECOMMAND CONFIGURATION "\${CTEST_CONFIGURATION_TYPE}")
+	set(MAKECOMMAND
+		${MAKECOMMAND}
+		CACHE
+		STRING
+		"Command to build the project")
 
-  # the default build configuration the ctest build handler will use
-  # if there is no -C arg given to ctest:
-  SET(DEFAULT_CTEST_CONFIGURATION_TYPE "$ENV{CMAKE_CONFIG_TYPE}")
-  IF(DEFAULT_CTEST_CONFIGURATION_TYPE STREQUAL "")
-    SET(DEFAULT_CTEST_CONFIGURATION_TYPE "Release")
-  ENDIF(DEFAULT_CTEST_CONFIGURATION_TYPE STREQUAL "")
+	# the default build configuration the ctest build handler will use
+	# if there is no -C arg given to ctest:
+	set(DEFAULT_CTEST_CONFIGURATION_TYPE "$ENV{CMAKE_CONFIG_TYPE}")
+	if(DEFAULT_CTEST_CONFIGURATION_TYPE STREQUAL "")
+		set(DEFAULT_CTEST_CONFIGURATION_TYPE "Release")
+	endif()
 
-  IF(NOT "${CMAKE_GENERATOR}" MATCHES "Make")
-    SET(CTEST_USE_LAUNCHERS 0)
-  ENDIF(NOT "${CMAKE_GENERATOR}" MATCHES "Make")
-  IF(CTEST_USE_LAUNCHERS)
-    SET(CTEST_LAUNCH_COMPILE "\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <OBJECT> --source <SOURCE> --language <LANGUAGE> --")
-    SET(CTEST_LAUNCH_LINK    "\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <TARGET> --target-type <TARGET_TYPE> --language <LANGUAGE> --")
-    SET(CTEST_LAUNCH_CUSTOM  "\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <OUTPUT> --")
-    SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CTEST_LAUNCH_COMPILE}")
-    SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CTEST_LAUNCH_LINK}")
-    SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CTEST_LAUNCH_CUSTOM}")
-  ENDIF(CTEST_USE_LAUNCHERS)
+	if(NOT "${CMAKE_GENERATOR}" MATCHES "Make")
+		set(CTEST_USE_LAUNCHERS 0)
+	endif()
+	if(CTEST_USE_LAUNCHERS)
+		set(CTEST_LAUNCH_COMPILE
+			"\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <OBJECT> --source <SOURCE> --language <LANGUAGE> --")
+		set(CTEST_LAUNCH_LINK
+			"\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <TARGET> --target-type <TARGET_TYPE> --language <LANGUAGE> --")
+		set(CTEST_LAUNCH_CUSTOM
+			"\"${CMAKE_CTEST_COMMAND}\" --launch --target-name <TARGET_NAME> --build-dir <CMAKE_CURRENT_BINARY_DIR> --output <OUTPUT> --")
+		set_property(GLOBAL
+			PROPERTY
+			RULE_LAUNCH_COMPILE
+			"${CTEST_LAUNCH_COMPILE}")
+		set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CTEST_LAUNCH_LINK}")
+		set_property(GLOBAL
+			PROPERTY
+			RULE_LAUNCH_CUSTOM
+			"${CTEST_LAUNCH_CUSTOM}")
+	endif()
 
-  MARK_AS_ADVANCED(
-    COVERAGE_COMMAND
-    CVSCOMMAND
-    SVNCOMMAND
-    BZRCOMMAND
-    HGCOMMAND
-    GITCOMMAND
-    CVS_UPDATE_OPTIONS
-    SVN_UPDATE_OPTIONS
-    BZR_UPDATE_OPTIONS
-    MAKECOMMAND 
-    MEMORYCHECK_COMMAND
-    MEMORYCHECK_SUPPRESSIONS_FILE
-    PURIFYCOMMAND
-    SCPCOMMAND
-    SLURM_SBATCH_COMMAND
-    SLURM_SRUN_COMMAND
-    SITE 
-    )
-  #  BUILDNAME 
-  IF(NOT RUN_FROM_DART)
-    SET(RUN_FROM_CTEST_OR_DART 1)
-    INCLUDE(CTestTargets)
-    SET(RUN_FROM_CTEST_OR_DART)
-  ENDIF(NOT RUN_FROM_DART)
-ENDIF(BUILD_TESTING)
+	mark_as_advanced(COVERAGE_COMMAND
+		CVSCOMMAND
+		SVNCOMMAND
+		BZRCOMMAND
+		HGCOMMAND
+		GITCOMMAND
+		CVS_UPDATE_OPTIONS
+		SVN_UPDATE_OPTIONS
+		BZR_UPDATE_OPTIONS
+		MAKECOMMAND
+		MEMORYCHECK_COMMAND
+		MEMORYCHECK_SUPPRESSIONS_FILE
+		PURIFYCOMMAND
+		SCPCOMMAND
+		SLURM_SBATCH_COMMAND
+		SLURM_SRUN_COMMAND
+		SITE)
+	#  BUILDNAME
+	if(NOT RUN_FROM_DART)
+		set(RUN_FROM_CTEST_OR_DART 1)
+		include(CTestTargets)
+		set(RUN_FROM_CTEST_OR_DART)
+	endif()
+endif()
